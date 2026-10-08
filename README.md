@@ -1,7 +1,3 @@
-Aqui está o código completo em um único arquivo. Todo o visual (CSS) e a lógica (JavaScript) foram colocados dentro do próprio HTML.
-
-Para usar, basta criar um único arquivo chamado `index.html` no GitHub, colar o código abaixo e salvar.
-
 ```html
 <!DOCTYPE html>
 <html lang="pt-BR">
