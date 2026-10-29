@@ -1,180 +1,217 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Biotiê Natural | Cosméticos Naturais, Veganos e Artesanais</title>
-<meta name="description" content="Cosméticos botânicos, veganos e artesanais, livres de alumínio e parabenos.">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config={theme:{extend:{colors:{bo:{50:'#F4F7F4',100:'#E5EBE5',500:'#6B8E7B',700:'#4A5D4E',800:'#38483B',900:'#2C332B'},sa:{50:'#FCFBF9',100:'#F9F6F0',200:'#EFECE6',300:'#E2DDD3'},tc:{500:'#C87D53',600:'#B0663E'}}}}}
-</script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
-<style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px);background:#FCFBF9}
-body{background:#FCFBF9;color:#2C332B;font-family:Georgia,'Times New Roman',serif}
-.sans,button,input{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
-[x-cloak]{display:none!important}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 </head>
-<body class="sans antialiased" x-data="shop()">
-
-<div x-cloak x-show="toast" x-transition class="fixed bottom-5 right-5 z-50 bg-bo-900 text-sa-50 px-5 py-3 rounded-xl shadow-2xl text-sm" x-text="toast"></div>
-
-<div class="bg-bo-800 text-sa-100 text-xs py-2 px-4 text-center">
-  Cupom 1ª compra: <b class="bg-tc-500 text-white px-2 py-0.5 rounded">BIOTIE10</b> (10% OFF) · 3% OFF no PIX · Até 3x sem juros
-</div>
-
-<header class="sticky top-0 z-30 bg-sa-50/95 backdrop-blur border-b border-sa-200" style="top:env(safe-area-inset-top,0px)">
-  <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-16 gap-3">
-    <button class="md:hidden text-2xl px-1" aria-label="Menu" @click="menu=!menu">☰</button>
-    <a href="#" class="text-2xl font-semibold text-bo-800" style="font-family:Georgia,serif">Biotiê <span class="text-[10px] uppercase tracking-widest text-tc-500 hidden sm:inline">Natural</span></a>
-    <input x-model="q" type="search" placeholder="Buscar produtos..." class="hidden md:block flex-1 max-w-md bg-sa-100 border border-sa-300 rounded-full py-2 px-4 text-sm focus:outline-none focus:border-bo-500">
-    <button @click="open=true" class="bg-bo-700 hover:bg-bo-800 text-sa-50 px-4 py-2 rounded-full text-sm font-semibold">🛍 Carrinho <span class="bg-sa-50 text-bo-900 rounded-full px-1.5 text-xs" x-text="count()"></span></button>
-  </div>
-  <nav class="hidden md:flex justify-center gap-8 py-2 border-t border-sa-200 text-xs font-semibold uppercase tracking-wider">
-    <template x-for="c in cats" :key="c[0]"><a href="#produtos" @click="cat=c[0]" class="hover:text-tc-500" :class="cat===c[0]&&'text-tc-500'" x-text="c[1]"></a></template>
-  </nav>
-  <div x-cloak x-show="menu" x-transition class="md:hidden border-t border-sa-200 bg-sa-50 p-4 space-y-3">
-    <input x-model="q" type="search" placeholder="Buscar produtos..." class="w-full bg-sa-100 border border-sa-300 rounded-full py-2 px-4 text-sm">
-    <template x-for="c in cats" :key="c[0]"><a href="#produtos" @click="cat=c[0];menu=false" class="block text-sm font-semibold py-1" x-text="c[1]"></a></template>
-  </div>
-</header>
-
-<section class="bg-bo-800 text-sa-50 py-16 md:py-24">
-  <div class="max-w-7xl mx-auto px-4 md:w-2/3">
-    <span class="text-xs font-bold uppercase tracking-widest bg-bo-700 px-3 py-1 rounded-full">100% vegano &amp; artesanal</span>
-    <h1 class="text-4xl md:text-6xl leading-tight mt-5">O poder dos óleos essenciais na sua pele.</h1>
-    <p class="text-sa-200 mt-4 max-w-lg text-sm md:text-base">Cosméticos botânicos para nutrir o corpo e acalmar a mente, livres de alumínio, parabenos e fragrâncias sintéticas.</p>
-    <a href="#produtos" class="inline-block mt-6 bg-tc-500 hover:bg-tc-600 text-white font-semibold px-8 py-3 rounded-full text-sm">Explorar coleção</a>
-  </div>
-</section>
-
-<section id="produtos" class="max-w-7xl mx-auto px-4 py-12">
-  <h2 class="text-3xl mb-6">Conheça nossos produtos artesanais</h2>
-  <div class="flex flex-wrap gap-2 mb-8">
-    <template x-for="c in cats" :key="c[0]"><button @click="cat=c[0]" class="px-4 py-2 rounded-full text-xs font-semibold" :class="cat===c[0]?'bg-bo-700 text-white':'bg-sa-200 text-bo-800'" x-text="c[1]"></button></template>
-  </div>
-  <p x-cloak x-show="list().length===0" class="text-sm text-gray-500">Nenhum produto encontrado.</p>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    <template x-for="p in list()" :key="p.id">
-      <div class="bg-white rounded-2xl border border-sa-200 overflow-hidden shadow-sm flex flex-col">
-        <div class="h-40 flex items-center justify-center text-6xl relative" :style="`background:linear-gradient(135deg,${p.c1},${p.c2})`">
-          <span x-text="p.icon"></span>
-          <span x-show="p.badge" class="absolute top-3 left-3 bg-tc-500 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full" x-text="p.badge"></span>
-        </div>
-        <div class="p-4 flex-1 flex flex-col justify-between">
-          <div><h3 class="font-bold text-sm" x-text="p.title"></h3><p class="text-xs text-gray-600 mt-1" x-text="p.sub"></p></div>
-          <div class="mt-4">
-            <span class="text-lg font-extrabold" x-text="money(p.price)"></span>
-            <span x-show="p.old" class="text-xs text-gray-500 line-through ml-1" x-text="money(p.old)"></span>
-            <p class="text-[11px] text-emerald-800"><span x-text="money(p.price*0.97)"></span> no PIX (3% OFF)</p>
-            <button @click="add(p)" class="mt-3 w-full bg-bo-700 hover:bg-bo-800 text-sa-50 font-semibold text-xs py-2.5 rounded-xl">+ Adicionar ao carrinho</button>
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-</section>
-
-<section class="bg-sa-100 py-14 border-y border-sa-200">
-  <div class="max-w-3xl mx-auto px-4 text-center">
-    <span class="text-tc-600 font-bold text-xs uppercase tracking-widest">Beleza limpa e consciente</span>
-    <h2 class="text-3xl mt-2 mb-4">Fórmulas artesanais, ricas em extratos botânicos.</h2>
-    <p class="text-gray-700 text-sm">Livre de alumínio e parabenos. Cruelty-free: nunca testado em animais.</p>
-  </div>
-</section>
-
-<footer class="bg-sa-200 py-10 text-xs text-gray-700">
-  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-6">
-    <div><b class="text-lg text-bo-800">Biotiê Natural</b><p class="mt-2">Cosméticos naturais, veganos e artesanais.</p></div>
-    <div><b class="uppercase tracking-wider">Atendimento</b><p class="mt-2">WhatsApp: (16) 99111-0781<br>contato@biotie.com.br<br>Segunda a sexta, 9h às 18h</p></div>
-    <div><b class="uppercase tracking-wider">Pagamento</b><p class="mt-2">PIX (3% OFF) · Até 3x sem juros</p></div>
-  </div>
-  <p class="text-center mt-8">© 2026 Biotiê Natural. Todos os direitos reservados.</p>
-</footer>
-
-<div x-cloak x-show="open" class="fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/50" @click="open=false"></div>
-  <aside class="absolute inset-y-0 right-0 w-full max-w-md bg-sa-50 shadow-2xl flex flex-col">
-    <div class="p-5 border-b border-sa-200 bg-sa-100 flex justify-between items-center">
-      <h3 class="font-bold text-lg">Seu carrinho <span class="text-xs font-normal text-gray-600" x-text="`(${count()} itens)`"></span></h3>
-      <button @click="open=false" aria-label="Fechar" class="text-xl px-2">✕</button>
-    </div>
-    <div class="bg-bo-100 px-5 py-3 text-xs font-semibold text-bo-800">
-      <span x-text="remaining()>0?`Faltam ${money(remaining())} para frete grátis!`:'🎉 Você ganhou frete grátis!'"></span>
-      <div class="w-full bg-sa-200 rounded-full h-2 mt-1"><div class="bg-bo-700 h-2 rounded-full transition-all" :style="`width:${Math.min(100,subtotal()/199*100)}%`"></div></div>
-    </div>
-    <div class="flex-1 overflow-y-auto p-5 space-y-4">
-      <p x-show="cart.length===0" class="text-center py-12 text-sm text-gray-500">Seu carrinho está vazio.</p>
-      <template x-for="it in cart" :key="it.id">
-        <div class="flex items-center gap-3 border-b border-sa-200 pb-3">
-          <div class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" :style="`background:linear-gradient(135deg,${it.c1},${it.c2})`" x-text="it.icon"></div>
-          <div class="flex-1">
-            <h4 class="font-bold text-xs" x-text="it.title"></h4>
-            <p class="text-xs text-gray-600" x-text="money(it.price)"></p>
-            <div class="flex items-center gap-3 mt-1">
-              <div class="flex items-center border border-sa-300 rounded-lg bg-white text-xs">
-                <button class="px-2 py-0.5" aria-label="Diminuir" @click="qty(it.id,-1)">−</button><b class="px-2" x-text="it.qty"></b><button class="px-2 py-0.5" aria-label="Aumentar" @click="qty(it.id,1)">+</button>
-              </div>
-              <button @click="remove(it.id)" class="text-xs text-red-700 underline">Remover</button>
-            </div>
-          </div>
-          <b class="text-xs" x-text="money(it.price*it.qty)"></b>
-        </div>
-      </template>
-    </div>
-    <div x-show="cart.length>0" class="p-5 border-t border-sa-200 bg-sa-100 space-y-3 text-xs">
-      <div class="flex gap-2">
-        <input x-model="code" placeholder="Cupom de desconto" class="flex-1 bg-white border border-sa-300 rounded-lg px-3 py-2 uppercase">
-        <button @click="coupon()" class="bg-bo-800 text-white px-4 rounded-lg font-bold">Aplicar</button>
-      </div>
-      <div class="flex justify-between"><span>Subtotal</span><span x-text="money(subtotal())"></span></div>
-      <div x-show="disc" class="flex justify-between text-emerald-800 font-semibold"><span>Cupom BIOTIE10 (10%)</span><span x-text="'- '+money(subtotal()*0.1)"></span></div>
-      <div class="flex justify-between font-bold text-sm border-t border-sa-300 pt-2"><span>Total (cartão, até 3x)</span><span x-text="money(total())"></span></div>
-      <div class="flex justify-between text-emerald-800 font-semibold"><span>Total no PIX (3% OFF)</span><span x-text="money(total()*0.97)"></span></div>
-      <button @click="checkout()" class="w-full bg-tc-500 hover:bg-tc-600 text-white font-bold py-3 rounded-xl text-sm">Finalizar pelo WhatsApp</button>
-    </div>
-  </aside>
-</div>
-
-<script>
-function shop(){
-  const P=[
-   {id:1,title:'Desodorante Natural em Spray',sub:'Tangerina, Litsea Cubeba e Cumaru (50 ml)',price:48.90,old:51.50,badge:'Mais vendido',cat:'corpo',icon:'🍊',c1:'#F6D9B8',c2:'#E9A66F'},
-   {id:2,title:'Hidratante Natural Corporal',sub:'Tangerina, Litsea Cubeba e Cumaru (200 ml)',price:109.90,badge:'Lançamento',cat:'corpo',icon:'🧴',c1:'#E5EBE5',c2:'#A9C2B2'},
-   {id:3,title:'Kit Trio Spray Aromaterapia',sub:'Calma, Energia e Foco (3x 120 ml)',price:205.20,old:228,badge:'10% OFF',cat:'aromaterapia',icon:'🌸',c1:'#EADCF0',c2:'#BFA3CF'},
-   {id:4,title:'Sabonete Facial Natural',sub:'Carvão ativado, melaleuca e menta (60 g)',price:45.90,cat:'skincare',icon:'🧼',c1:'#D9DDD9',c2:'#8A958C'},
-   {id:5,title:'Kit Detox das Axilas Especial',sub:'Máscara de argila + desodorante + mini ecobag',price:157.70,old:160.70,badge:'Kit especial',cat:'kits',icon:'🎁',c1:'#F3E3C9',c2:'#D9B98A'},
-   {id:6,title:'Óleo Calmante Íntimo Feel Lub',sub:'Alívio e hidratação com óleos botânicos (30 ml)',price:98,cat:'intimo',icon:'💧',c1:'#F9E0DA',c2:'#E4A99B'},
-   {id:7,title:'Máscara Natural de Argila Verde',sub:'Argila verde, menta e melaleuca (30 ml)',price:53.90,cat:'skincare',icon:'🌿',c1:'#D6E6D2',c2:'#8DB58A'},
-   {id:8,title:'Kit Mini Trio Desodorante',sub:'Com mini ecobag Biotiê',price:65.90,cat:'kits',icon:'👜',c1:'#F0E6D6',c2:'#CDB894'}
-  ];
-  let saved=[],d=false;
-  try{saved=JSON.parse(localStorage.getItem('biotie-cart')||'[]');d=localStorage.getItem('biotie-disc')==='1'}catch(e){}
-  return{
-    products:P,cart:Array.isArray(saved)?saved:[],disc:d,q:'',cat:'todos',open:false,menu:false,code:'',toast:'',
-    cats:[['todos','Todos'],['corpo','Corpo'],['skincare','Skincare'],['aromaterapia','Aromaterapia'],['intimo','Linha íntima'],['kits','Kits']],
-    list(){const t=this.q.trim().toLowerCase();return P.filter(p=>(this.cat==='todos'||p.cat===this.cat)&&(!t||(p.title+' '+p.sub).toLowerCase().includes(t)))},
-    save(){try{localStorage.setItem('biotie-cart',JSON.stringify(this.cart));localStorage.setItem('biotie-disc',this.disc?'1':'0')}catch(e){}},
-    add(p){const e=this.cart.find(i=>i.id===p.id);e?e.qty++:this.cart.push({...p,qty:1});this.save();this.say('Adicionado ao carrinho!');this.open=true},
-    qty(id,n){const i=this.cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<=0)this.remove(id);else this.save()},
-    remove(id){this.cart=this.cart.filter(i=>i.id!==id);this.save()},
-    count(){return this.cart.reduce((a,i)=>a+i.qty,0)},
-    subtotal(){return this.cart.reduce((a,i)=>a+Math.round(i.price*100)*i.qty,0)/100},
-    total(){return Math.round(this.subtotal()*(this.disc?0.9:1)*100)/100},
-    remaining(){return Math.max(0,199-this.subtotal())},
-    coupon(){if(this.code.trim().toUpperCase()==='BIOTIE10'){this.disc=true;this.save();this.say('Cupom BIOTIE10 aplicado (10% OFF)!')}else this.say('Cupom inválido.')},
-    checkout(){
-      const l=this.cart.map(i=>`• ${i.qty}x ${i.title} — ${this.money(i.price*i.qty)}`).join('\n');
-      const m=`Olá! Quero fazer um pedido na Biotiê:\n${l}\n\nTotal (cartão): ${this.money(this.total())}\nTotal no PIX: ${this.money(this.total()*0.97)}${this.disc?'\nCupom: BIOTIE10':''}`;
-      window.open('https://wa.me/5516991110781?text='+encodeURIComponent(m),'_blank');
-    },
-    money(v){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v)},
-    say(m){this.toast=m;clearTimeout(this._t);this._t=setTimeout(()=>this.toast='',3000)}
-  }
+<body>
+<title>Pitá Sabonete Stick</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Archivo:wght@400;500;700;800;900&display=swap">
+<style>
+/* Declaração da fonte própria da marca */
+@font-face {
+  font-family: 'PitaFont';
+  src: url('PitaFont.woff2') format('woff2'),
+       url('PitaFont.woff') format('woff'),
+       url('PitaFont.ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
 }
-</script>
-</body>
-</html>
+
+/* Layout: neo-brutalista suave — blocos chapados, borda preta + sombra dura deslocada, serifada pesada grande */
+:root{
+  --pink:#BA1858;--green:#9DB556;--cream:#FBFFB2;
+  --bg:#fdfcf5;--fg:#161012;--muted:#5b4d52;--card:#ffffff;--ink:#161012;--line:#16101233;--dark:#171214;--on-dark:#fbf8f0;
+  --display:"PitaFont","Libre Caslon Text","Times New Roman",serif;
+  --body:"Archivo",system-ui,sans-serif;
+  --sh:5px 5px 0 var(--ink);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#140e11;--fg:#fbf8ec;--muted:#c8b9be;--card:#221a1e;--ink:#000;--line:#fbf8ec33;--dark:#0b0809;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#140e11;--fg:#fbf8ec;--muted:#c8b9be;--card:#221a1e;--ink:#000;--line:#fbf8ec33;--dark:#0b0809;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--bg)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,.serif{font-family:var(--display);font-weight:700;letter-spacing:-.02em;text-wrap:balance;margin:0}
+a{color:inherit}button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:2px solid #161012;border-radius:999px;padding:12px 24px;font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;box-shadow:4px 4px 0 #161012;transition:transform .15s,box-shadow .15s;color:#161012;background:#fff}
+.pill:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #161012}
+.pill:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #161012}
+.pill.pink{background:var(--pink);color:#fff}.pill.green{background:var(--green)}
+.pill.flat{box-shadow:none}
+.box{border:2px solid #161012;border-radius:26px;box-shadow:6px 6px 0 #161012;overflow:hidden}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bg);border-bottom:2px solid var(--fg)}
+.nav{display:flex;align-items:center;gap:20px;padding-block:12px}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:32px;color:var(--pink);text-decoration:none;line-height:1}
+.logo svg{width:34px;height:34px}
+.links{display:flex;gap:24px;margin-left:auto;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.links a{text-decoration:none}.links a:hover{color:var(--pink)}
+.tools{display:flex;gap:8px;align-items:center}
+.icon-btn{border:2px solid var(--fg);background:var(--card);color:var(--fg);border-radius:999px;height:40px;padding:0 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.icon-btn.on{background:var(--pink);color:#fff;border-color:var(--pink)}
+.tools .pill{padding:9px 18px;font-size:12px}
+@media(max-width:860px){.links{display:none}.icon-btn .lbl{display:none}.tools{margin-left:auto}}
+@media(max-width:480px){.tools .pill{display:none}}
+
+.hero{background:var(--cream);color:#161012;border-bottom:2px solid #161012}
+.hero .wrap{padding-block:64px 70px;display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:center}
+.tagline{display:inline-block;background:var(--green);border:2px solid #161012;border-radius:999px;padding:4px 16px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.hero h1{font-size:clamp(54px,7.4vw,96px);line-height:.95;margin-block:22px 20px}
+.hero h1 em{font-style:italic;color:var(--pink)}
+.hero .lead{font-size:18px;max-width:42ch;color:#4a3d42}
+.hero .row{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
+.hero-img{position:relative;max-width:100%}
+.hero-img .box{aspect-ratio:4/3;background:#fff}
+.hero-img img{width:100%;height:100%;object-fit:cover;display:block}
+.seal{position:absolute;left:-26px;top:-34px;width:116px;height:116px;border-radius:50%;background:var(--pink);color:var(--cream);border:2px solid #161012;box-shadow:4px 4px 0 #161012;display:grid;place-items:center;text-align:center;font-family:var(--display);font-weight:700;font-size:19px;line-height:1.05;padding:14px;transform:rotate(-10deg);z-index:2;animation:wob 5s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(6deg) scale(1.04)}}
+@media(max-width:860px){.hero .wrap{grid-template-columns:1fr}.seal{left:8px;top:-30px;width:96px;height:96px;font-size:16px}}
+
+.marquee{background:var(--pink);color:#fff;overflow:hidden;padding-block:16px;border-bottom:2px solid #161012}
+.track{display:flex;width:max-content;animation:scroll 30s linear infinite;font-family:var(--display);font-weight:700;font-size:clamp(24px,3vw,34px);white-space:nowrap}
+.track span{display:flex;align-items:center;gap:40px;padding-right:40px}
+.track span::before{content:"✦";color:var(--cream)}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+section.sec{padding-block:80px;border-bottom:2px solid var(--fg)}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:40px}
+.sec-head h2,section h2{font-size:clamp(40px,5.4vw,68px);line-height:1}
+.sec-head p{max-width:34ch;color:var(--muted);margin:0}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.stick{padding:40px;min-height:240px;display:flex;flex-direction:column;gap:12px;position:relative;transition:transform .2s}
+.stick:hover{transform:rotate(-1deg) translateY(-4px)}
+.stick.p{background:var(--pink);color:#fff}.stick.g{background:var(--green);color:#161012}
+.stick .k{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.stick h3{font-size:clamp(38px,4.4vw,54px)}
+.stick p{max-width:40ch;margin:0;font-size:17px}
+.stick .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.stick .meta span{border:1.5px solid currentColor;border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700}
+@media(max-width:860px){.duo{grid-template-columns:1fr}}
+
+.uses{display:grid;grid-template-columns:2fr 1fr;gap:28px}
+.uses .box{display:flex;flex-direction:column;background:#fff}
+.uses .box img{width:100%;aspect-ratio:4/3.1;object-fit:cover;display:block;flex:1}
+.uses .box:nth-child(2) img{aspect-ratio:auto;height:100%}
+.cap{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 24px;color:#161012;border-top:2px solid #161012}
+.cap b{font-family:var(--display);font-size:22px}
+.cap span{font-size:13px}
+.cy{background:var(--cream)}.cg{background:var(--green)}.cp{background:var(--pink);color:#fff}
+.uses2{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}
+.chipbox{padding:28px;display:flex;flex-wrap:wrap;gap:10px;align-content:center;background:var(--card)}
+.chip{border:2px solid var(--fg);border-radius:999px;padding:8px 18px;font-weight:700;font-size:14px}
+@media(max-width:860px){.uses,.uses2{grid-template-columns:1fr}}
+
+.ritual{background:var(--dark);color:var(--on-dark)}
+.ritual h2{margin-bottom:46px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.step{border-top:1px solid #fbf8f055;padding-top:30px}
+.step .n{font-family:var(--display);font-weight:700;font-size:60px;color:var(--pink);line-height:1}
+.step b{font-family:var(--display);font-size:26px;display:block;margin-block:16px 6px}
+.step p{color:#cfc4c8;margin:0}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.split img{width:100%;display:block;aspect-ratio:16/9.5;object-fit:cover}
+.split p{color:var(--muted);font-size:17px;max-width:48ch;margin-block:18px 28px}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+
+.band{background:var(--green);color:#161012;padding:52px 44px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.band h2{max-width:16ch}
+
+footer.foot{background:var(--cream);color:#161012;text-align:center;padding-block:48px 40px;display:grid;justify-items:center;gap:14px;font-size:14px}
+footer.foot svg{width:90px;height:90px}
+footer.foot .brand{font-family:var(--display);font-weight:700;font-size:40px;color:var(--pink);line-height:.8}
+
+#shop{display:none}
+body.shopping #home{display:none}body.shopping #shop{display:block}
+.shop-hero{background:var(--pink);color:#fff;border-bottom:2px solid #161012;position:relative;overflow:hidden}
+.shop-hero .wrap{padding-block:56px 70px;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;position:relative}
+.shop-hero h1{font-size:clamp(48px,7vw,96px);line-height:.95;margin-block:20px}
+.shop-hero h1 em{color:var(--cream)}
+.badge-off{display:inline-block;background:var(--cream);color:var(--pink);font-weight:900;padding:8px 18px;border-radius:999px;border:2px solid #161012;box-shadow:3px 3px 0 #161012;transform:rotate(-4deg);font-size:15px;letter-spacing:.06em}
+.shop-hero .box{transform:rotate(2deg);background:#fff}
+.shop-hero .box img{width:100%;display:block}
+.dots{position:absolute;inset:0;background-image:radial-gradient(#fbffb233 2px,transparent 2.5px);background-size:26px 26px;pointer-events:none}
+.timer{display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:wrap;font-weight:700}
+.timer b{background:#161012;color:var(--cream);border-radius:10px;padding:6px 10px;font-variant-numeric:tabular-nums;font-size:20px}
+@media(max-width:860px){.shop-hero .wrap{grid-template-columns:1fr}}
+.buybox{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:26px;padding-block:60px 30px;align-items:start}
+.offer{background:var(--card);color:var(--fg);border:2px solid var(--fg);border-radius:26px;box-shadow:6px 6px 0 var(--fg);padding:28px;display:flex;flex-direction:column;gap:12px;position:relative;transition:transform .2s}
+.offer:hover{transform:translateY(-6px)}
+.offer.best{background:var(--cream);color:#161012;border-color:#161012;box-shadow:8px 8px 0 var(--pink)}
+.offer.best .desc,.offer.best .inst,.offer.best .old{color:#4a3d42}
+.offer.best .qty button{color:#161012;border-color:#161012}
+.offer .ribbon{position:absolute;top:-16px;left:24px;background:var(--pink);color:#fff;border:2px solid #161012;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.1em}
+.offer .sw{display:flex;gap:6px}.offer .sw i{width:22px;height:40px;border-radius:8px 8px 4px 4px;border:2px solid #161012;display:block}
+.offer h3{font-size:36px}
+.offer .desc{color:var(--muted);font-size:15px;min-height:46px}
+.price{font-family:var(--display);font-weight:700;font-size:56px;line-height:1;color:var(--pink);font-variant-numeric:tabular-nums}
+.old{text-decoration:line-through;color:var(--muted);font-size:15px}
+.inst{font-size:14px;color:var(--muted)}
+.qty{display:flex;align-items:center;gap:12px;font-weight:700}
+.qty button{width:38px;height:38px;border-radius:50%;border:2px solid var(--fg);background:transparent;color:var(--fg);font-size:18px}
+.offer .pill{justify-content:center;margin-top:6px}
+@media(max-width:960px){.buybox{grid-template-columns:1fr}}
+.perks{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;padding-block:20px 70px}
+.perk{padding:24px;background:var(--green);color:#161012}
+.perk:nth-child(2){background:var(--cream)}.perk:nth-child(3){background:var(--pink);color:#fff}
+.perk b{font-family:var(--display);font-size:24px;display:block}
+@media(max-width:860px){.perks{grid-template-columns:1fr}}
+.cart{position:sticky;bottom:0;background:var(--dark);color:var(--on-dark);border-top:2px solid #161012;padding-block:14px calc(14px + env(safe-area-inset-bottom,0px));z-index:40}
+.cart .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.cart strong{font-family:var(--display);font-size:30px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--green);color:#161012;border:2px solid #161012;box-shadow:4px 4px 0 #161012;padding:12px 22px;border-radius:999px;font-weight:800;z-index:99}
+
+body.editing [data-e]{outline:2px dashed var(--green);outline-offset:3px;cursor:text}
+body.editing [data-img]{outline:4px dashed var(--pink);outline-offset:-4px;cursor:pointer}
+.editbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(76px + env(safe-area-inset-top,0px));background:var(--green);color:#161012;border:2px solid #161012;box-shadow:4px 4px 0 #161012;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:700;z-index:70;max-width:calc(100% - 32px);text-align:center}
+dialog{border:2px solid var(--fg);box-shadow:8px 8px 0 var(--pink);border-radius:24px;padding:0;background:var(--card);color:var(--fg);width:min(580px,calc(100% - 32px));max-height:90vh}
+dialog::backdrop{background:#16101299}
+.adm{padding:28px;display:grid;gap:14px}
+.adm h3{font-size:36px}
+.adm fieldset{border:2px solid var(--line);border-radius:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+.adm legend{font-weight:800;padding:0 6px}
+.adm label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.adm input{font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--fg);width:100%}
+.adm .full{grid-column:1/-1}
+.adm .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.err{color:var(--pink);font-size:14px;font-weight:700}
+@media (prefers-reduced-motion:reduce){.track,.seal{animation:none}*{transition:none!important}}
+</style>
+<header><div class="wrap nav">
+ <a href="#" class="logo" id="goHome" aria-label="Pitá início"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M22 52c-10-6-13-20-6-32 1 6 4 9 7 10-2-8 1-17 8-22-1 7 1 12 5 15 1-5 4-9 8-11-2 6-1 10 2 13" fill="none" stroke="#9DB556" stroke-width="5" stroke-linecap="round"/><circle cx="38" cy="40" r="17" fill="#BA1858"/><circle cx="38" cy="40" r="12" fill="#fff"/><g fill="#161012"><circle cx="33" cy="36" r="1.3"/><circle cx="39" cy="34" r="1.3"/><circle cx="44" cy="38" r="1.3"/><circle cx="35" cy="42" r="1.3"/><circle cx="41" cy="43" r="1.3"/><circle cx="38" cy="48" r="1.3"/></g></svg>pitá</a>
+ <nav class="links"><a href="#produtos" class="tohome">Produtos</a><a href="#rotina" class="tohome">Rotina</a><a href="#como" class="tohome">Como usar</a><a href="#sobre" class="tohome">Sobre</a></nav>
+ <div class="tools">
+  <button class="icon-btn" id="themeBtn" aria-label="Alternar tema"><span id="themeIco">☾</span><span class="lbl" id="themeLbl">Escuro</span></button>
+  <button class="icon-btn" id="editBtn"><span>✎</span><span class="lbl">Editar</span></button>
+  <button class="icon-btn" id="admBtn"><span>⚙</span><span class="lbl">Admin</span></button>
+  <button class="pill pink" data-buy>Comprar kit</button>
+ </div>
+</div></header>
+
+<main id="home">
+ <section class="hero"><div class="wrap">
+  <div>
+   <span class="tagline" data-e="h_eye">Novo · kit 2 sticks de pitaya</span>
+   <h1 data-e="h_title">Pele em dia. Mesmo <em>sem tempo.</em></h1>
+   <p class="lead" data-e="h_lead">Um esfoliante rosa e um hidratante verde, em stick. O tratamento de pele que cabe na mochila, no vestiário e na sua correria.</p>
+   <div class="row"><a class="pill pink" href="#produtos">Conhecer o kit →</a><a class="pill flat" href="#como">Como usar</a><button class="pill green" data-buy>🛍 Comprar · <span class="pkit">R$ 89,90</span></button></div>
+  </div>
+  <div class="hero-img"><div class="seal" data-e="h_sticker">30 seg de cuidado</div><div class="box"><img data-img="img_hero" src="data:image/jpeg;base64,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
+</style></head><body>
+<a href="#shop" class="pill pink" style="position:fixed;bottom:18px;right:18px;z-index:60;box-shadow:6px 6px 0 #161012">Comprar Kit</a>
+
+<div id="home">
+ <section class="hero"><div class="wrap">
+  <div>
+   <span class="tagline" data-e="h_eye">Novo · kit 2 sticks de pitaya</span>
+   <h1 data-e="h_title">Pele em dia. Mesmo <em>sem tempo.</em></h1>
+   <p class="lead" data-e="h_lead">Um esfoliante rosa e um hidratante verde, em stick. O tratamento de pele que cabe na mochila, no vestiário e na sua correria.</p>
+   <div class="row"><a class="pill pink" href="#shop">Conhecer o kit →</a><a class="pill flat" href="#como">Como usar</a><a class="pill green" href="#shop">🛍 Comprar · <span class="pkit">R$ 89,90</span></a></div>
+  </div>
+  <div class="hero-img"><div class="seal" data-e="h_sticker">30 seg de cuidado</div><div class="box"><img data-img="img_hero" src="data:image/jpeg;base64,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 T5a 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
