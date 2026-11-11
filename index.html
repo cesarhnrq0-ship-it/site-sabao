@@ -246,7 +246,7 @@ function openForm(type,t=null){
   v.oninput=()=>{const dg=v.value.replace(/\D/g,'').slice(0,11);v.value=dg?brl(Number(dg)/100):''};
   $('#c').querySelectorAll('button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;$('#c').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
   $('#cn').onclick=closeSheet;
-  if(!t) setTimeout(()=>v.focus(),300);
+  if(!t) setTimeout(()=>{ if(!v.value) v.focus(); },300);
   $('#f').onsubmit=async e=>{e.preventDefault();
     const amount=r2(parseVal(v.value)), desc=$('#d').value.trim()||cat, date=$('#dt').value;
     if(!(amount>0)) return $('#e').textContent='Digite um valor maior que zero.';
@@ -290,6 +290,14 @@ $('#file').onchange=async e=>{
   try{await DB.open();await load()}catch(e){$('#main').innerHTML='<div class="card empty">Não foi possível abrir o armazenamento. Saia do modo de navegação privada e tente de novo.</div>';return}
   navigator.storage?.persist?.();
   render();
+  // Atalho do iPhone: ?add=out&v=45,90&d=Mercado abre o formulário preenchido
+  const q=new URLSearchParams(location.search);
+  if(q.get('add')==='in'||q.get('add')==='out'){
+    history.replaceState(null,'',location.pathname);
+    openForm(q.get('add'));
+    const v=parseVal(q.get('v')||''); if(v>0) $('#v').value=brl(v);
+    if(q.get('d')) $('#d').value=q.get('d').slice(0,80);
+  }
   if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js');
 })();
 </script>
