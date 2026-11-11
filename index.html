@@ -67,6 +67,7 @@ main{padding:4px 16px calc(96px + var(--bot));max-width:560px;margin:0 auto}
 .btn.ghost{background:#ebe9e1;color:var(--tx)}.btn.del{background:var(--out-bg);color:var(--out)}
 .btn+.btn{margin-top:10px}
 .tip{background:#e7f0eb}.tip p{transition:opacity .15s}
+.big2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}.pbar{height:10px;border-radius:99px;background:#ebe9e1;overflow:hidden}.pbar i{display:block;height:100%;border-radius:99px;background:var(--in);transition:width .6s ease}.pbar.warn i{background:#d9a03a}.pbar.bad i{background:var(--out)}
 .note{font-size:13px;color:var(--mu);margin-top:10px;line-height:1.45}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--ln);padding:6px 8px calc(6px + var(--bot))}
 nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--mu);padding:4px 0}
@@ -128,29 +129,39 @@ function parseVal(s){s=String(s).replace(/[^\d,.-]/g,'');if(s.includes(','))s=s.
 
 const CATS={
   in:[['Salário','💼'],['Freela','🧑‍💻'],['Vendas','🛒'],['Pix recebido','💸'],['Outros','✨']],
-  out:[['Alimentação','🍽️'],['Mercado','🧺'],['Transporte','🚗'],['Casa','🏠'],['Contas','🧾'],['Lazer','🎉'],['Saúde','🩺'],['Compras','🛍️'],['Educação','📚'],['Outros','✨']]
+  out:[['Alimentação','🍽️'],['Mercado','🧺'],['Transporte','🚗'],['Casa','🏠'],['Contas','🧾'],['Lazer','🎉'],['Saúde','🩺'],['Compras','🛍️'],['Educação','📚'],['Outros','✨'],['Reserva','🐷']]
 };
 const icon=(type,cat)=>(CATS[type].find(c=>c[0]===cat)||['','✨'])[1];
 
 /* ===== Armazenamento (IndexedDB, persistente e offline) ===== */
 const DB={
   db:null,
-  open(){return new Promise((ok,ko)=>{const r=indexedDB.open('guardadinho',1);r.onupgradeneeded=()=>r.result.createObjectStore('tx',{keyPath:'id'});r.onsuccess=()=>{this.db=r.result;ok()};r.onerror=()=>ko(r.error)})},
-  st(m){return this.db.transaction('tx',m).objectStore('tx')},
+  open(){return new Promise((ok,ko)=>{const r=indexedDB.open('guardadinho',2);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('tx'))d.createObjectStore('tx',{keyPath:'id'});if(!d.objectStoreNames.contains('cfg'))d.createObjectStore('cfg');};r.onsuccess=()=>{this.db=r.result;ok()};r.onerror=()=>ko(r.error)})},
+  st(m,n='tx'){return this.db.transaction(n,m).objectStore(n)},
+  getCfg(){return this.req(this.st('readonly','cfg').get('cfg'))},
+  setCfg(c){return this.req(this.st('readwrite','cfg').put(c,'cfg'))},
   req(r){return new Promise((ok,ko)=>{r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)})},
   all(){return this.req(this.st('readonly').getAll())},
   put(o){return this.req(this.st('readwrite').put(o))},
   del(id){return this.req(this.st('readwrite').delete(id))},
   replaceAll(list){return new Promise((ok,ko)=>{const t=this.db.transaction('tx','readwrite');const s=t.objectStore('tx');s.clear();list.forEach(o=>s.put(o));t.oncomplete=ok;t.onerror=()=>ko(t.error)})}
 };
-let TX=[];
-async function load(){TX=(await DB.all()).map(t=>({...t,amount:Number(t.amount)}))}
+let TX=[], CFG={week:26,goal:1000};
+async function load(){TX=(await DB.all()).map(t=>({...t,amount:Number(t.amount)}));CFG={week:26,goal:1000,...(await DB.getCfg()||{})}}
 
 /* ===== Cálculos ===== */
 const sum=a=>r2(a.reduce((s,t)=>s+t.amount,0));
 const ofM=ym=>TX.filter(t=>t.date.startsWith(ym));
 const inM=ym=>sum(ofM(ym).filter(t=>t.type==='in'));
-const outM=ym=>sum(ofM(ym).filter(t=>t.type==='out'));
+const isRes=t=>t.type==='out'&&t.category==='Reserva';
+const isSpend=t=>t.type==='out'&&t.category!=='Reserva';
+const outM=ym=>sum(ofM(ym).filter(isSpend));
+const resM=ym=>sum(ofM(ym).filter(isRes));
+const reserve=()=>sum(TX.filter(isRes));
+const weekStart=(ds=today())=>{const[y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);dt.setDate(dt.getDate()-((dt.getDay()+6)%7));return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`};
+const weekEnd=ws=>{const[y,m,d]=ws.split('-').map(Number);const dt=new Date(y,m-1,d+6);return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`};
+const weekSpend=(ds=today(),skip=null)=>{const a=weekStart(ds),b=weekEnd(a);return sum(TX.filter(t=>isSpend(t)&&t.id!==skip&&t.date>=a&&t.date<=b))};
+const noSpendStreak=()=>{let n=0;const d=new Date();for(let i=0;i<60;i++){const ds=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;if(TX.some(t=>isSpend(t)&&t.date===ds))break;n++;d.setDate(d.getDate()-1)}return n};
 const balance=()=>r2(sum(TX.filter(t=>t.type==='in'))-sum(TX.filter(t=>t.type==='out')));
 const sorted=l=>[...l].sort((a,b)=>b.date.localeCompare(a.date)||(b.created||0)-(a.created||0));
 
@@ -195,10 +206,21 @@ const tipIdx=()=>{const d=new Date();return (d.getFullYear()*372+d.getMonth()*31
 let tipN=null;
 /* ===== Telas ===== */
 function vHome(){
-  const ym=curYM(), i=inM(ym), o=outM(ym), recent=sorted(TX).slice(0,5);
+  const ym=curYM(), i=inM(ym), o=outM(ym), g=resM(ym), recent=sorted(TX).slice(0,5);
+  const ws=weekSpend(), wl=r2(CFG.week-ws), wp=CFG.week?Math.min(100,ws/CFG.week*100):0;
+  const rv=reserve(), rp=CFG.goal?Math.min(100,rv/CFG.goal*100):0;
+  const wDays=7-((new Date().getDay()+6)%7);
   return `<div class="card hero"><small>Saldo atual</small><div class="big">${brl(balance())}</div>
-    <div class="trio"><div><span>Entradas</span><b>${brl(i)}</b></div><div><span>Saídas</span><b>${brl(o)}</b></div><div><span>Sobrou</span><b>${brl(i-o)}</b></div></div></div>
+    <div class="trio"><div><span>Entradas</span><b>${brl(i)}</b></div><div><span>Gastos</span><b>${brl(o)}</b></div><div><span>Guardado</span><b>${brl(g)}</b></div></div></div>
   <div class="acts"><button class="act in" data-add="in">＋ Entrada</button><button class="act out" data-add="out">− Saída</button></div>
+  <div class="card"><div class="ttl">Teto da semana <small>${brl(CFG.week)}</small></div>
+    <div class="big2 ${wl<0?'amt out':''}">${wl<0?'Estourou '+brl(-wl):brl(wl)+' livres'}</div>
+    <div class="pbar ${wl<0?'bad':wp>=80?'warn':''}"><i style="width:${wp}%"></i></div>
+    <p class="note" style="margin-top:8px">${wl<0?'Você passou do limite. Não gaste mais nada até segunda.':ws===0?'Nenhum gasto nesta semana. Continue assim!':`Gastou ${brl(ws)} · faltam ${wDays} dia(s) para a semana virar.`}${noSpendStreak()>=2?` 🔥 ${noSpendStreak()} dias seguidos sem gastar.`:''}</p></div>
+  <div class="card"><div class="ttl">🐷 Reserva <small>meta ${brl(CFG.goal)}</small></div>
+    <div class="big2">${brl(rv)}</div>
+    <div class="pbar"><i style="width:${rp}%"></i></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="note" style="margin:0">${rv>=CFG.goal?'Meta batida! 🎉':`${rp.toFixed(0)}% · faltam ${brl(CFG.goal-rv)}`}</span><button class="act in" style="padding:9px 14px;font-size:14px" id="save">Guardar</button></div></div>
   <div class="card tip" id="tip"><div class="ttl">💡 Dica do dia <small>toque para outra</small></div><p style="font-size:15px;line-height:1.45">${TIPS[tipN??tipIdx()]}</p></div>
   <div class="card"><div class="ttl">Entradas e saídas <small>6 meses</small></div>${chartHTML()}</div>
   <div class="card"><div class="ttl">Últimas movimentações</div>${recent.length?recent.map(itemHTML).join(''):'<div class="empty">Nada registrado ainda.<br>Toque em Entrada ou Saída para começar.</div>'}</div>`;
@@ -214,14 +236,15 @@ function vHist(){
 function vSum(){
   const i=inM(sumYM),o=outM(sumYM),p=ymAdd(sumYM,-1),pi=inM(p),po=outM(p);
   const cmp=(a,b,goodUp)=>{if(!b)return'<span style="color:var(--mu);font-size:13px">—</span>';const v=(a-b)/b*100;const good=goodUp?v>=0:v<=0;return `<span class="chip ${good?'good':'bad'}">${v>=0?'+':''}${v.toFixed(0)}%</span>`};
-  const cats={};ofM(sumYM).filter(t=>t.type==='out').forEach(t=>cats[t.category]=(cats[t.category]||0)+t.amount);
+  const cats={};ofM(sumYM).filter(isSpend).forEach(t=>cats[t.category]=(cats[t.category]||0)+t.amount);
   const ck=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
   const ms=Array.from({length:6},(_,k)=>ymAdd(sumYM,-k));
   return `<div class="mnav"><button class="mbtn" id="sp">‹</button><b>${mLong(sumYM)}</b><button class="mbtn" id="sn">›</button></div>
   <div class="card">
     <div class="row"><span>Total recebido</span><b class="amt in">${brl(i)}</b></div>
     <div class="row"><span>Total gasto</span><b class="amt out">${brl(o)}</b></div>
-    <div class="row"><span>Saldo restante</span><b>${brl(i-o)}</b></div></div>
+    <div class="row"><span>Guardado na reserva</span><b class="amt in">${brl(resM(sumYM))}</b></div>
+    <div class="row"><span>Saldo restante</span><b>${brl(i-o-resM(sumYM))}</b></div></div>
   <div class="card"><div class="ttl">Comparado a ${mLong(p)}</div>
     <div class="row"><span>Recebido</span><span>${brl(pi)} &nbsp;${cmp(i,pi,true)}</span></div>
     <div class="row"><span>Gasto</span><span>${brl(po)} &nbsp;${cmp(o,po,false)}</span></div>
@@ -230,7 +253,11 @@ function vSum(){
   <div class="card"><div class="ttl">Meses anteriores</div>${ms.map(m=>{const a=inM(m),b=outM(m);return `<div class="row"><span style="text-transform:capitalize">${mLong(m)}</span><span style="text-align:right;font-size:13.5px"><span class="amt in">+${brl(a)}</span> · <span class="amt out">−${brl(b)}</span><br><b>${brl(a-b)}</b></span></div>`}).join('')}</div>`;
 }
 function vSet(){
-  return `<div class="card"><div class="ttl">Seus dados</div>
+  return `<div class="card"><div class="ttl">Seus limites</div>
+    <div class="fld"><label>Teto de gastos por semana</label><input id="cw" inputmode="decimal" value="${brl(CFG.week)}"></div>
+    <div class="fld"><label>Meta da reserva</label><input id="cg" inputmode="decimal" value="${brl(CFG.goal)}"></div>
+    <button class="btn" id="cs">Salvar limites</button></div>
+  <div class="card"><div class="ttl">Seus dados</div>
     <button class="btn" id="csv">Exportar CSV</button>
     <button class="btn ghost" id="bk">Fazer backup</button>
     <button class="btn ghost" id="rs">Restaurar backup</button>
@@ -240,10 +267,12 @@ function vSet(){
   <p class="note" style="text-align:center">${TX.length} movimentações registradas · Guardadinho</p>`;
 }
 const bind={
-  home(m){m.querySelector('#tip').onclick=()=>{tipN=((tipN??tipIdx())+1)%TIPS.length;const p=m.querySelector('#tip p');p.style.opacity=0;setTimeout(()=>{p.textContent=TIPS[tipN];p.style.opacity=1},150)}},
+  _home(m){m.querySelector('#save').onclick=()=>openForm('out',null,'Reserva')},
+  home(m){bind._home(m);m.querySelector('#tip').onclick=()=>{tipN=((tipN??tipIdx())+1)%TIPS.length;const p=m.querySelector('#tip p');p.style.opacity=0;setTimeout(()=>{p.textContent=TIPS[tipN];p.style.opacity=1},150)}},
   hist(m){m.querySelector('#hp').onclick=()=>{histYM=ymAdd(histYM,-1);render()};m.querySelector('#hn').onclick=()=>{histYM=ymAdd(histYM,1);render()};m.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{histType=b.dataset.t;render()})},
   sum(m){m.querySelector('#sp').onclick=()=>{sumYM=ymAdd(sumYM,-1);render()};m.querySelector('#sn').onclick=()=>{sumYM=ymAdd(sumYM,1);render()}},
-  set(m){m.querySelector('#csv').onclick=exportCSV;m.querySelector('#bk').onclick=backup;m.querySelector('#rs').onclick=()=>$('#file').click();
+  set(m){const mask=e=>{const dg=e.target.value.replace(/\D/g,'').slice(0,11);e.target.value=dg?brl(Number(dg)/100):''};m.querySelector('#cw').oninput=mask;m.querySelector('#cg').oninput=mask;
+    m.querySelector('#cs').onclick=async()=>{const w=r2(parseVal(m.querySelector('#cw').value)),g=r2(parseVal(m.querySelector('#cg').value));if(!(w>=0)||!(g>0))return toast('Valores inválidos');CFG={...CFG,week:w,goal:g};await DB.setCfg(CFG);toast('Limites salvos')};m.querySelector('#csv').onclick=exportCSV;m.querySelector('#bk').onclick=backup;m.querySelector('#rs').onclick=()=>$('#file').click();
     m.querySelector('#wipe').onclick=()=>confirmSheet('Apagar todos os dados?','Isso não pode ser desfeito. Faça um backup antes.','Apagar tudo',async()=>{await DB.replaceAll([]);await load();toast('Dados apagados');render()})}
 };
 
@@ -252,9 +281,9 @@ function showSheet(html){const s=$('#sheet'),o=$('#ov');s.innerHTML='<div class=
 function closeSheet(){const s=$('#sheet'),o=$('#ov');s.classList.remove('show');o.classList.remove('show');setTimeout(()=>o.classList.add('hidden'),250)}
 $('#ov').onclick=closeSheet;
 
-function openForm(type,t=null){
-  type=t?t.type:type; let cat=t?t.category:CATS[type][0][0];
-  showSheet(`<h2>${t?'Editar':'Nova'} ${type==='in'?'entrada':'saída'}</h2>
+function openForm(type,t=null,preCat=null){
+  type=t?t.type:type; let cat=t?t.category:(preCat||CATS[type][0][0]); let warned=false;
+  showSheet(`<h2>${t?'Editar':cat==='Reserva'?'Guardar na':'Nova'} ${type==='in'?'entrada':cat==='Reserva'?'reserva':'saída'}</h2>
     <form id="f" novalidate>
     <input class="val ${type}" id="v" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off" value="${t?brl(t.amount):''}">
     <div class="err" id="e"></div>
@@ -273,8 +302,9 @@ function openForm(type,t=null){
     const amount=r2(parseVal(v.value)), desc=$('#d').value.trim()||cat, date=$('#dt').value;
     if(!(amount>0)) return $('#e').textContent='Digite um valor maior que zero.';
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return $('#e').textContent='Escolha uma data válida.';
+    if(type==='out'&&cat!=='Reserva'&&!warned){const after=r2(weekSpend(date,t?.id)+amount);if(CFG.week>0&&after>CFG.week){warned=true;$('#e').textContent=`⚠️ Isso estoura o teto da semana em ${brl(after-CFG.week)}. Precisa mesmo?`;$('#f [type=submit]').textContent='Gastar mesmo assim';$('#f [type=submit]').style.background='var(--out)';return}}
     const o={id:t?.id||uid(),type,amount,desc,category:cat,date,created:t?.created||Date.now()};
-    try{await DB.put(o);await load();closeSheet();toast(t?'Alterado':'Registrado');render()}catch(err){$('#e').textContent='Não foi possível salvar: '+err.message}
+    try{await DB.put(o);await load();closeSheet();toast(t?'Alterado':cat==='Reserva'?'Guardado na reserva 🐷':'Registrado');render()}catch(err){$('#e').textContent='Não foi possível salvar: '+err.message}
   };
   if(t) $('#x').onclick=()=>confirmSheet('Excluir movimentação?',`${esc(t.desc)} · ${brl(t.amount)}`,'Excluir',async()=>{await DB.del(t.id);await load();toast('Excluído');render()});
 }
@@ -295,7 +325,7 @@ function exportCSV(){
   const rows=sorted(TX).map(t=>[t.date.split('-').reverse().join('/'),t.type==='in'?'Entrada':'Saída',t.desc,t.category,(t.type==='in'?t.amount:-t.amount).toFixed(2).replace('.',',')].map(q).join(';'));
   download(`guardadinho-${today()}.csv`,'﻿'+['Data','Tipo','Descrição','Categoria','Valor'].map(q).join(';')+'\n'+rows.join('\n'),'text/csv');
 }
-function backup(){download(`guardadinho-backup-${today()}.json`,JSON.stringify({app:'guardadinho',version:1,exported:new Date().toISOString(),transactions:TX},null,1),'application/json')}
+function backup(){download(`guardadinho-backup-${today()}.json`,JSON.stringify({app:'guardadinho',version:1,exported:new Date().toISOString(),transactions:TX,config:CFG},null,1),'application/json')}
 $('#file').onchange=async e=>{
   const f=e.target.files[0]; e.target.value=''; if(!f) return;
   try{
@@ -303,7 +333,7 @@ $('#file').onchange=async e=>{
     if(data?.app!=='guardadinho'||!Array.isArray(list)) throw new Error('Arquivo não é um backup do Guardadinho.');
     const ok=list.filter(t=>t&&t.id&&(t.type==='in'||t.type==='out')&&Number(t.amount)>0&&/^\d{4}-\d{2}-\d{2}$/.test(t.date))
       .map(t=>({id:String(t.id),type:t.type,amount:r2(Number(t.amount)),desc:String(t.desc||'').slice(0,80)||'Sem descrição',category:String(t.category||'Outros'),date:t.date,created:Number(t.created)||0}));
-    confirmSheet('Restaurar backup?',`${ok.length} movimentações serão restauradas e vão substituir os dados atuais.`,'Restaurar',async()=>{await DB.replaceAll(ok);await load();toast('Backup restaurado');render()});
+    confirmSheet('Restaurar backup?',`${ok.length} movimentações serão restauradas e vão substituir os dados atuais.`,'Restaurar',async()=>{await DB.replaceAll(ok);if(data.config)await DB.setCfg({week:Number(data.config.week)||26,goal:Number(data.config.goal)||1000});await load();toast('Backup restaurado');render()});
   }catch(err){toast(err.message.includes('JSON')?'Arquivo inválido':err.message)}
 };
 
