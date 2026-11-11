@@ -68,6 +68,7 @@ main{padding:4px 16px calc(96px + var(--bot));max-width:560px;margin:0 auto}
 .btn+.btn{margin-top:10px}
 .tip{background:#e7f0eb}.tip p{transition:opacity .15s}
 .big2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}.pbar{height:10px;border-radius:99px;background:#ebe9e1;overflow:hidden}.pbar i{display:block;height:100%;border-radius:99px;background:var(--in);transition:width .6s ease}.pbar.warn i{background:#d9a03a}.pbar.bad i{background:var(--out)}
+.warnbar{position:sticky;top:0;z-index:20;background:#fbe8e5;color:#8a2a1e;font-size:13.5px;line-height:1.4;padding:calc(var(--top) + 10px) 16px 10px}
 .note{font-size:13px;color:var(--mu);margin-top:10px;line-height:1.45}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--ln);padding:6px 8px calc(6px + var(--bot))}
 nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--mu);padding:4px 0}
@@ -147,7 +148,13 @@ const DB={
   replaceAll(list){return new Promise((ok,ko)=>{const t=this.db.transaction('tx','readwrite');const s=t.objectStore('tx');s.clear();list.forEach(o=>s.put(o));t.oncomplete=ok;t.onerror=()=>ko(t.error)})}
 };
 let TX=[], CFG={week:26,goal:1000};
-async function load(){TX=(await DB.all()).map(t=>({...t,amount:Number(t.amount)}));CFG={week:26,goal:1000,...(await DB.getCfg()||{})}}
+const LS='guardadinho_copia';
+function mirror(){try{localStorage.setItem(LS,JSON.stringify({transactions:TX,config:CFG,at:Date.now()}))}catch(e){}}
+async function load(){
+  TX=(await DB.all()).map(t=>({...t,amount:Number(t.amount)}));CFG={week:26,goal:1000,...(await DB.getCfg()||{})};
+  if(!TX.length){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c&&c.transactions&&c.transactions.length){await DB.replaceAll(c.transactions);if(c.config)await DB.setCfg(c.config);TX=c.transactions.map(t=>({...t,amount:Number(t.amount)}));CFG={...CFG,...(c.config||{})};}}catch(e){}}
+  mirror();
+}
 
 /* ===== Cálculos ===== */
 const sum=a=>r2(a.reduce((s,t)=>s+t.amount,0));
@@ -272,7 +279,7 @@ const bind={
   hist(m){m.querySelector('#hp').onclick=()=>{histYM=ymAdd(histYM,-1);render()};m.querySelector('#hn').onclick=()=>{histYM=ymAdd(histYM,1);render()};m.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{histType=b.dataset.t;render()})},
   sum(m){m.querySelector('#sp').onclick=()=>{sumYM=ymAdd(sumYM,-1);render()};m.querySelector('#sn').onclick=()=>{sumYM=ymAdd(sumYM,1);render()}},
   set(m){const mask=e=>{const dg=e.target.value.replace(/\D/g,'').slice(0,11);e.target.value=dg?brl(Number(dg)/100):''};m.querySelector('#cw').oninput=mask;m.querySelector('#cg').oninput=mask;
-    m.querySelector('#cs').onclick=async()=>{const w=r2(parseVal(m.querySelector('#cw').value)),g=r2(parseVal(m.querySelector('#cg').value));if(!(w>=0)||!(g>0))return toast('Valores inválidos');CFG={...CFG,week:w,goal:g};await DB.setCfg(CFG);toast('Limites salvos')};m.querySelector('#csv').onclick=exportCSV;m.querySelector('#bk').onclick=backup;m.querySelector('#rs').onclick=()=>$('#file').click();
+    m.querySelector('#cs').onclick=async()=>{const w=r2(parseVal(m.querySelector('#cw').value)),g=r2(parseVal(m.querySelector('#cg').value));if(!(w>=0)||!(g>0))return toast('Valores inválidos');CFG={...CFG,week:w,goal:g};await DB.setCfg(CFG);mirror();toast('Limites salvos')};m.querySelector('#csv').onclick=exportCSV;m.querySelector('#bk').onclick=backup;m.querySelector('#rs').onclick=()=>$('#file').click();
     m.querySelector('#wipe').onclick=()=>confirmSheet('Apagar todos os dados?','Isso não pode ser desfeito. Faça um backup antes.','Apagar tudo',async()=>{await DB.replaceAll([]);await load();toast('Dados apagados');render()})}
 };
 
@@ -340,8 +347,11 @@ $('#file').onchange=async e=>{
 /* ===== Início ===== */
 (async()=>{
   try{await DB.open();await load()}catch(e){$('#main').innerHTML='<div class="card empty">Não foi possível abrir o armazenamento. Saia do modo de navegação privada e tente de novo.</div>';return}
-  navigator.storage?.persist?.();
+  let persisted=false;try{persisted=await navigator.storage?.persist?.()}catch(e){}
   render();
+  const bad=!/^https?:$/.test(location.protocol)||location.hostname==='';
+  let lsOk=true;try{localStorage.setItem('_t','1');localStorage.removeItem('_t')}catch(e){lsOk=false}
+  if(bad||!lsOk){const w=document.createElement('div');w.className='warnbar';w.innerHTML='⚠️ Neste lugar os dados <b>não ficam salvos</b>. Abra o Guardadinho pelo link do GitHub no Safari (fora da aba privada) ou pelo ícone da Tela de Início.';document.body.prepend(w)}
   // Atalho do iPhone: ?add=out&v=45,90&d=Mercado abre o formulário preenchido
   const q=new URLSearchParams(location.search);
   if(q.get('add')==='in'||q.get('add')==='out'){
